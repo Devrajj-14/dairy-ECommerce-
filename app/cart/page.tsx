@@ -1,20 +1,24 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Check, Tag, Truck, CreditCard } from "lucide-react";
+import { ChevronRight, ChevronLeft, Check, Tag, Truck, CreditCard, ShoppingBag, ArrowRight } from "lucide-react";
 import { products } from "@/lib/data";
+import Link from "next/link";
 
 const steps = ["Cart", "Delivery", "Payment"] as const;
 type Step = (typeof steps)[number];
 
-const cartItems = [
+const demoCartItems = [
   { product: products[0], qty: 2, isSubscription: true },
   { product: products[4], qty: 1, isSubscription: false },
 ];
 
 export default function CartPage() {
   const [step, setStep] = useState<Step>("Cart");
+  const [cartItems] = useState(demoCartItems);
   const [form, setForm] = useState({ name: "", phone: "", address: "", city: "", pincode: "", deliveryTime: "morning" });
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const isEmpty = cartItems.length === 0;
 
   const subtotal = cartItems.reduce((a, b) => a + b.product.pricePerUnit * b.qty, 0);
   const delivery = 0;
@@ -24,6 +28,50 @@ export default function CartPage() {
   const handleField = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
+
+  const goBack = () => {
+    if (step === "Payment") setStep("Delivery");
+    else if (step === "Delivery") setStep("Cart");
+  };
+
+  // ─── Empty cart state ──────────────────────────────────────────
+  if (isEmpty) {
+    return (
+      <div className="min-h-screen bg-cream-50 pt-24">
+        <div className="container-premium py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center max-w-md mx-auto"
+          >
+            <div className="w-24 h-24 rounded-full bg-cream-100 border border-stone-200 flex items-center justify-center mx-auto mb-8">
+              <ShoppingBag size={36} strokeWidth={1.2} className="text-stone-300" />
+            </div>
+            <h1 className="font-display text-3xl text-stone-900 mb-3">Your cart is empty</h1>
+            <p className="text-stone-500 text-sm leading-relaxed mb-8">
+              Looks like you haven't added any products yet. Explore our collection of farm-fresh dairy delivered to your door.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/shop"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-sage-600 hover:bg-sage-700 text-white text-sm font-semibold rounded-xl transition-all duration-300 hover:shadow-md group"
+              >
+                Browse Products
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/custom"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-stone-300 hover:border-stone-400 text-stone-700 hover:text-stone-900 text-sm font-medium rounded-xl transition-all duration-200"
+              >
+                Build Your Milk
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cream-50 pt-24">
@@ -73,7 +121,9 @@ export default function CartPage() {
                     {cartItems.map(({ product, qty, isSubscription }) => (
                       <div key={product.id} className="flex items-center gap-5 p-5 bg-cream-100 border border-stone-200 rounded-2xl">
                         <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-amber-50 to-cream-200 flex items-center justify-center text-3xl shrink-0">
-                          🥛
+                          {product.category === "fresh-milk" ? "🥛" :
+                           product.category === "curd" ? "🍶" :
+                           product.category === "ghee" ? "✨" : "🥛"}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-stone-900">{product.name}</p>
@@ -81,7 +131,7 @@ export default function CartPage() {
                           {isSubscription && <span className="badge-sage text-xs mt-1">Subscribe & Save 5%</span>}
                         </div>
                         <div className="text-right">
-                          <p className="font-display text-lg font-700 text-stone-900">₹{product.pricePerUnit * qty}</p>
+                          <p className="font-display text-lg font-bold text-stone-900">₹{product.pricePerUnit * qty}</p>
                           <p className="text-xs text-stone-400">₹{product.pricePerUnit}/unit</p>
                         </div>
                       </div>
@@ -110,6 +160,13 @@ export default function CartPage() {
 
               {step === "Delivery" && (
                 <motion.div key="delivery" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.35 }}>
+                  <button
+                    onClick={goBack}
+                    className="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700 font-medium mb-6 transition-colors"
+                  >
+                    <ChevronLeft size={16} />
+                    Back to Cart
+                  </button>
                   <form onSubmit={(e) => { e.preventDefault(); setStep("Payment"); }} className="space-y-5">
                     {[
                       { id: "name", label: "Full name", type: "text", placeholder: "Arjun Mehta" },
@@ -160,25 +217,46 @@ export default function CartPage() {
 
               {step === "Payment" && (
                 <motion.div key="payment" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.35 }}>
+                  <button
+                    onClick={goBack}
+                    className="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700 font-medium mb-6 transition-colors"
+                  >
+                    <ChevronLeft size={16} />
+                    Back to Delivery
+                  </button>
                   <div className="space-y-4 mb-8">
                     {[
                       { id: "upi", label: "UPI", desc: "Pay via GPay, PhonePe, or any UPI app", icon: "💳" },
                       { id: "card", label: "Credit / Debit Card", desc: "All major banks accepted", icon: "🏧" },
                       { id: "netbanking", label: "Net Banking", desc: "Direct bank transfer", icon: "🏦" },
                     ].map((method) => (
-                      <div key={method.id} className="flex items-center gap-4 p-5 bg-cream-100 border-2 border-stone-200 rounded-xl hover:border-stone-300 cursor-pointer transition-all">
+                      <button
+                        key={method.id}
+                        onClick={() => setSelectedPayment(method.id)}
+                        className={`w-full flex items-center gap-4 p-5 border-2 rounded-xl text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:ring-offset-2 ${
+                          selectedPayment === method.id
+                            ? "border-sage-600 bg-sage-600/5 shadow-sm"
+                            : "border-stone-200 bg-cream-100 hover:border-stone-300"
+                        }`}
+                      >
                         <span className="text-2xl">{method.icon}</span>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-semibold text-stone-900 text-sm">{method.label}</p>
                           <p className="text-xs text-stone-400">{method.desc}</p>
                         </div>
-                      </div>
+                        {selectedPayment === method.id && (
+                          <div className="w-5 h-5 rounded-full bg-sage-600 flex items-center justify-center shrink-0">
+                            <Check size={10} className="text-white" strokeWidth={3} />
+                          </div>
+                        )}
+                      </button>
                     ))}
                   </div>
 
                   <button
                     onClick={() => alert("Order placed! Thank you for choosing Pura.")}
-                    className="w-full py-4 bg-sage-600 hover:bg-sage-700 text-white text-base font-semibold rounded-xl transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:ring-offset-2"
+                    disabled={!selectedPayment}
+                    className="w-full py-4 bg-sage-600 hover:bg-sage-700 text-white text-base font-semibold rounded-xl transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <CreditCard size={20} />
                     Pay ₹{total} — Confirm Order

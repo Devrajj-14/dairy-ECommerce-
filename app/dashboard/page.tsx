@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Package, Settings, FileText, RefreshCw, Pause, Play, PlusCircle } from "lucide-react";
-import { products, subscriptionPlans } from "@/lib/data";
+import { Calendar, Package, Settings, RefreshCw, Pause, Play, PlusCircle, ShoppingBag, ArrowRight, Clock, FileText } from "lucide-react";
+import { products } from "@/lib/data";
 import Link from "next/link";
 
 const navItems = [
@@ -33,7 +33,7 @@ export default function DashboardPage() {
           className="mb-8"
         >
           <p className="label-sm mb-1">Good morning</p>
-          <h1 className="font-display text-3xl text-stone-900 font-600">Your Pura Dashboard</h1>
+          <h1 className="font-display text-3xl text-stone-900 font-semibold">Your Pura Dashboard</h1>
         </motion.div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -72,9 +72,9 @@ export default function DashboardPage() {
                       { label: "Subscription", value: "Active", sub: "Daily plan" },
                       { label: "Next delivery", value: "Tomorrow", sub: "Before 7 AM" },
                     ].map(({ label, value, sub }) => (
-                      <div key={label} className="p-5 bg-cream-100 border border-stone-200 rounded-xl">
+                      <div key={label} className="p-5 bg-cream-100 border border-stone-200 rounded-xl hover:shadow-sm hover:border-stone-300 transition-all duration-200">
                         <p className="label-sm mb-2">{label}</p>
-                        <p className="font-display text-2xl font-700 text-stone-900">{value}</p>
+                        <p className="font-display text-2xl font-bold text-stone-900">{value}</p>
                         <p className="text-xs text-stone-400 mt-0.5">{sub}</p>
                       </div>
                     ))}
@@ -125,7 +125,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Subscription card */}
-                  <div className="p-6 bg-white border border-stone-200 rounded-2xl shadow-xs">
+                  <div className="p-6 bg-white border border-stone-200 rounded-2xl shadow-sm">
                     <div className="flex items-start justify-between mb-5">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -137,7 +137,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-stone-500">Daily · 1L · Morning delivery · ₹65/day</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-display text-2xl font-700 text-stone-900">₹1,950</p>
+                        <p className="font-display text-2xl font-bold text-stone-900">₹1,950</p>
                         <p className="text-xs text-stone-400">per month</p>
                       </div>
                     </div>
@@ -161,6 +161,24 @@ export default function DashboardPage() {
                       </Link>
                     </div>
                   </div>
+
+                  {/* Empty state for additional subscriptions */}
+                  <div className="p-8 bg-cream-100 border border-dashed border-stone-300 rounded-2xl text-center">
+                    <div className="w-14 h-14 rounded-full bg-cream-200 flex items-center justify-center mx-auto mb-4">
+                      <RefreshCw size={22} strokeWidth={1.2} className="text-stone-400" />
+                    </div>
+                    <p className="text-sm font-semibold text-stone-700 mb-1">Add another subscription</p>
+                    <p className="text-xs text-stone-400 mb-4 max-w-xs mx-auto">
+                      Get curd, buttermilk, or ghee delivered on your schedule alongside your milk.
+                    </p>
+                    <Link
+                      href="/subscribe"
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-colors"
+                    >
+                      <PlusCircle size={14} />
+                      Browse plans
+                    </Link>
+                  </div>
                 </motion.div>
               )}
 
@@ -169,21 +187,41 @@ export default function DashboardPage() {
                   <h2 className="font-display text-lg text-stone-900 mb-5">Order History</h2>
                   <div className="space-y-3">
                     {[
-                      { id: "ORD-8821", date: "10 Mar 2025", items: "A2 Cow Milk × 1L, Curd × 500g", total: 125 },
-                      { id: "ORD-8820", date: "9 Mar 2025", items: "A2 Cow Milk × 1L", total: 65 },
-                      { id: "ORD-8819", date: "8 Mar 2025", items: "A2 Cow Milk × 1L, Paneer × 250g", total: 265 },
+                      { id: "ORD-8821", date: "10 Mar 2025", items: "A2 Cow Milk × 1L, Curd × 500g", total: 125, status: "Delivered" },
+                      { id: "ORD-8820", date: "9 Mar 2025", items: "A2 Cow Milk × 1L", total: 65, status: "Delivered" },
+                      { id: "ORD-8819", date: "8 Mar 2025", items: "A2 Cow Milk × 1L, Paneer × 250g", total: 265, status: "Delivered" },
                     ].map((order) => (
-                      <div key={order.id} className="flex items-center justify-between p-5 bg-cream-100 border border-stone-200 rounded-xl">
-                        <div>
-                          <p className="text-sm font-semibold text-stone-900">{order.id}</p>
-                          <p className="text-xs text-stone-500 mt-0.5">{order.date} · {order.items}</p>
+                      <div key={order.id} className="flex items-center justify-between p-5 bg-cream-100 border border-stone-200 rounded-xl hover:shadow-sm hover:border-stone-300 transition-all duration-200">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-sage-600/10 flex items-center justify-center shrink-0">
+                            <Package size={16} strokeWidth={1.5} className="text-sage-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-stone-900">{order.id}</p>
+                            <p className="text-xs text-stone-500 mt-0.5">{order.date} · {order.items}</p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          <p className="font-semibold text-stone-900">₹{order.total}</p>
-                          <button className="text-xs text-sage-600 hover:text-sage-700 font-medium focus-visible:ring-2 focus-visible:ring-sage-600">Reorder</button>
+                          <div className="text-right">
+                            <p className="font-semibold text-stone-900">₹{order.total}</p>
+                            <p className="text-xs text-sage-600 font-medium">{order.status}</p>
+                          </div>
+                          <button className="text-xs text-sage-600 hover:text-sage-700 font-medium focus-visible:ring-2 focus-visible:ring-sage-600 px-3 py-1.5 rounded-lg border border-stone-200 hover:border-sage-400 transition-all">
+                            Reorder
+                          </button>
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Empty state hint */}
+                  <div className="mt-8 p-6 bg-cream-100 border border-dashed border-stone-300 rounded-2xl text-center">
+                    <div className="w-12 h-12 rounded-full bg-cream-200 flex items-center justify-center mx-auto mb-3">
+                      <Clock size={20} strokeWidth={1.2} className="text-stone-400" />
+                    </div>
+                    <p className="text-sm text-stone-500">
+                      Showing your last 3 orders. Older orders will appear as your history grows.
+                    </p>
                   </div>
                 </motion.div>
               )}

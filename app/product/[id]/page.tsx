@@ -1,19 +1,65 @@
 "use client";
-import { useState } from "react";
+import { useState, use } from "react";
 import { motion } from "framer-motion";
-import { Star, ShoppingBag, RefreshCw, Truck, Shield, Plus, Minus, ChevronLeft } from "lucide-react";
+import { Star, ShoppingBag, RefreshCw, Truck, Shield, Plus, Minus, ArrowLeft } from "lucide-react";
 import { products } from "@/lib/data";
+import ProductCard from "@/components/ui/ProductCard";
 import Link from "next/link";
 
-// In a real app, this would use dynamic routing [id]
-// For this demo, we show a product detail for the first product
-export default function ProductDetailPage() {
-  const product = products[0]; // A2 Cow Milk
+export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const product = products.find((p) => p.id === id);
+
+  if (!product) {
+    return <ProductNotFound />;
+  }
+
+  return <ProductDetailView product={product} />;
+}
+
+/* ─── Not Found ────────────────────────────────────────────────────── */
+function ProductNotFound() {
+  return (
+    <div className="min-h-screen bg-cream-50 pt-20 flex items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="text-center max-w-md px-6"
+      >
+        <div className="w-20 h-20 rounded-full bg-cream-100 border border-stone-200 flex items-center justify-center mx-auto mb-6">
+          <span className="text-4xl" aria-hidden="true">🥛</span>
+        </div>
+        <h1 className="font-display text-3xl text-stone-900 mb-3">Product not found</h1>
+        <p className="text-stone-500 text-sm leading-relaxed mb-8">
+          We couldn't find the product you're looking for. It may have been removed or the URL might be incorrect.
+        </p>
+        <Link
+          href="/shop"
+          className="inline-flex items-center gap-2 px-7 py-3.5 bg-sage-600 hover:bg-sage-700 text-white text-sm font-semibold rounded-xl transition-all duration-300 hover:shadow-md"
+        >
+          <ArrowLeft size={16} />
+          Browse All Products
+        </Link>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ─── Detail View ──────────────────────────────────────────────────── */
+import type { Product } from "@/lib/types";
+
+function ProductDetailView({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
   const [isSubscription, setIsSubscription] = useState(false);
   const [activeTab, setActiveTab] = useState<"description" | "nutrition" | "reviews">("description");
 
   const totalPrice = product.pricePerUnit * quantity;
+
+  // Related products: same category or milk type, exclude current
+  const related = products
+    .filter((p) => p.id !== product.id && (p.category === product.category || p.milkType === product.milkType))
+    .slice(0, 4);
 
   return (
     <div className="min-h-screen bg-cream-50 pt-20">
@@ -45,10 +91,18 @@ export default function ProductDetailPage() {
                 transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
                 className="text-center"
               >
-                <div className="text-9xl mb-4" aria-hidden="true">🥛</div>
+                <div className="text-9xl mb-4" aria-hidden="true">
+                  {product.category === "fresh-milk" ? "🥛" :
+                   product.category === "ghee" ? "✨" :
+                   product.category === "curd" ? "🍶" :
+                   product.category === "paneer" ? "🧀" :
+                   product.category === "buttermilk" ? "🥤" : "🥛"}
+                </div>
                 <div className="px-5 py-2 bg-white/70 backdrop-blur-sm rounded-full">
                   <p className="text-sm font-semibold text-stone-700">{product.name}</p>
-                  <p className="text-xs text-stone-400">{product.fatPercentage}% fat · {product.quantity}{product.quantityUnit}</p>
+                  <p className="text-xs text-stone-400">
+                    {product.fatPercentage ? `${product.fatPercentage}% fat · ` : ""}{product.quantity}{product.quantityUnit}
+                  </p>
                 </div>
               </motion.div>
 
@@ -61,12 +115,12 @@ export default function ProductDetailPage() {
 
             {/* Thumbnail row */}
             <div className="grid grid-cols-4 gap-3">
-              {["fat", "farm", "package", "delivery"].map((v, i) => (
+              {["🥛","🌿","📦","🚴"].map((emoji, i) => (
                 <div
-                  key={v}
+                  key={i}
                   className={`aspect-square rounded-xl bg-gradient-to-br from-cream-100 to-cream-200 flex items-center justify-center cursor-pointer border-2 transition-all ${i === 0 ? "border-sage-500" : "border-transparent hover:border-stone-300"}`}
                 >
-                  <span className="text-2xl" aria-hidden="true">{["🥛","🌿","📦","🚴"][i]}</span>
+                  <span className="text-2xl" aria-hidden="true">{emoji}</span>
                 </div>
               ))}
             </div>
@@ -79,7 +133,7 @@ export default function ProductDetailPage() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
           >
             <p className="label-md mb-3">
-              {product.category.replace("-", " ")} · {product.milkType && product.milkType}
+              {product.category.replace("-", " ")}{product.milkType ? ` · ${product.milkType}` : ""}
             </p>
 
             <h1 className="display-md text-stone-900 mb-3">{product.name}</h1>
@@ -104,7 +158,7 @@ export default function ProductDetailPage() {
               <div className="mb-6 p-4 bg-cream-100 border border-stone-200 rounded-xl">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-stone-700">Fat Content</span>
-                  <span className="font-display text-xl font-700 text-stone-900">{product.fatPercentage}%</span>
+                  <span className="font-display text-xl font-bold text-stone-900">{product.fatPercentage}%</span>
                 </div>
                 <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
                   <motion.div
@@ -122,26 +176,28 @@ export default function ProductDetailPage() {
             )}
 
             {/* Order type toggle */}
-            <div className="flex gap-2 mb-6 p-1 bg-cream-100 border border-stone-200 rounded-xl">
-              <button
-                onClick={() => setIsSubscription(false)}
-                aria-pressed={!isSubscription}
-                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-sage-600 ${
-                  !isSubscription ? "bg-white text-stone-900 shadow-sm border border-stone-200" : "text-stone-500 hover:text-stone-700"
-                }`}
-              >
-                One-time
-              </button>
-              <button
-                onClick={() => setIsSubscription(true)}
-                aria-pressed={isSubscription}
-                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-sage-600 ${
-                  isSubscription ? "bg-white text-sage-700 shadow-sm border border-stone-200" : "text-stone-500 hover:text-stone-700"
-                }`}
-              >
-                Subscribe & Save 5%
-              </button>
-            </div>
+            {product.isSubscriptionEligible && (
+              <div className="flex gap-2 mb-6 p-1 bg-cream-100 border border-stone-200 rounded-xl">
+                <button
+                  onClick={() => setIsSubscription(false)}
+                  aria-pressed={!isSubscription}
+                  className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-sage-600 ${
+                    !isSubscription ? "bg-white text-stone-900 shadow-sm border border-stone-200" : "text-stone-500 hover:text-stone-700"
+                  }`}
+                >
+                  One-time
+                </button>
+                <button
+                  onClick={() => setIsSubscription(true)}
+                  aria-pressed={isSubscription}
+                  className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-sage-600 ${
+                    isSubscription ? "bg-white text-sage-700 shadow-sm border border-stone-200" : "text-stone-500 hover:text-stone-700"
+                  }`}
+                >
+                  Subscribe & Save 5%
+                </button>
+              </div>
+            )}
 
             {/* Quantity */}
             <div className="flex items-center gap-4 mb-6">
@@ -163,13 +219,13 @@ export default function ProductDetailPage() {
                   <Plus size={15} />
                 </button>
               </div>
-              <span className="text-stone-400 text-sm">× {product.pricePerUnit}/L</span>
+              <span className="text-stone-400 text-sm">× {product.pricePerUnit}{product.priceUnit}</span>
             </div>
 
             {/* Price + CTA */}
             <div className="mb-6">
               <div className="flex items-baseline gap-2 mb-4">
-                <span className="font-display text-4xl font-700 text-stone-900">₹{isSubscription ? Math.round(totalPrice * 0.95) : totalPrice}</span>
+                <span className="font-display text-4xl font-bold text-stone-900">₹{isSubscription ? Math.round(totalPrice * 0.95) : totalPrice}</span>
                 {isSubscription && (
                   <span className="text-stone-400 text-sm line-through">₹{totalPrice}</span>
                 )}
@@ -250,15 +306,19 @@ export default function ProductDetailPage() {
 
             {activeTab === "nutrition" && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                <h3 className="font-display text-xl text-stone-900 mb-5">Nutrition facts <span className="text-stone-400 text-base font-400 font-sans">per 100ml</span></h3>
-                <div className="max-w-sm grid grid-cols-2 gap-3">
-                  {product.nutritionFacts?.map((fact) => (
-                    <div key={fact.label} className="p-4 bg-cream-100 border border-stone-200 rounded-xl">
-                      <p className="text-xs text-stone-400 mb-1">{fact.label}</p>
-                      <p className="font-display text-2xl font-700 text-stone-900">{fact.value}<span className="text-sm text-stone-400 ml-1">{fact.unit}</span></p>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="font-display text-xl text-stone-900 mb-5">Nutrition facts <span className="text-stone-400 text-base font-normal font-sans">per 100ml</span></h3>
+                {product.nutritionFacts && product.nutritionFacts.length > 0 ? (
+                  <div className="max-w-sm grid grid-cols-2 gap-3">
+                    {product.nutritionFacts.map((fact) => (
+                      <div key={fact.label} className="p-4 bg-cream-100 border border-stone-200 rounded-xl">
+                        <p className="text-xs text-stone-400 mb-1">{fact.label}</p>
+                        <p className="font-display text-2xl font-bold text-stone-900">{fact.value}<span className="text-sm text-stone-400 ml-1">{fact.unit}</span></p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-stone-400">Nutrition details coming soon for this product.</p>
+                )}
               </motion.div>
             )}
 
@@ -266,7 +326,7 @@ export default function ProductDetailPage() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                 <div className="flex items-center gap-4 mb-8">
                   <div className="text-center">
-                    <p className="font-display text-5xl font-700 text-stone-900">{product.rating}</p>
+                    <p className="font-display text-5xl font-bold text-stone-900">{product.rating}</p>
                     <div className="flex gap-0.5 justify-center my-1">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} size={14} className="text-amber-400 fill-amber-400" />
@@ -278,9 +338,9 @@ export default function ProductDetailPage() {
 
                 <div className="space-y-4 max-w-xl">
                   {[
-                    { name: "Preethi G.", rating: 5, text: "The A2 milk is exceptional. I can taste the difference from supermarket milk immediately." },
-                    { name: "Suresh K.", rating: 5, text: "Finally found a milk my daughter doesn't complain about. She says it tastes like the milk from her grandmother's village." },
-                    { name: "Ravi M.", rating: 5, text: "Switched my whole family. The fat percentage transparency is what sold me — I actually know what I'm buying." },
+                    { name: "Preethi G.", rating: 5, text: `The ${product.name} is exceptional. I can taste the difference from supermarket products immediately.` },
+                    { name: "Suresh K.", rating: 5, text: `Finally found a quality ${product.category.replace("-", " ")} my whole family loves. The freshness is unmatched.` },
+                    { name: "Ravi M.", rating: 5, text: "Switched my whole family to Pura. The transparency on sourcing and quality is what sold me — I actually know what I'm buying." },
                   ].map(({ name, rating, text }) => (
                     <div key={name} className="p-5 bg-cream-100 border border-stone-200 rounded-xl">
                       <div className="flex items-center justify-between mb-2">
@@ -298,6 +358,52 @@ export default function ProductDetailPage() {
               </motion.div>
             )}
           </div>
+        </div>
+
+        {/* Related Products */}
+        {related.length > 0 && (
+          <section className="mt-16 pt-12 border-t border-stone-200/60">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="flex items-end justify-between mb-8">
+                <div>
+                  <p className="label-md mb-2">You may also like</p>
+                  <h2 className="font-display text-2xl text-stone-900">Related Products</h2>
+                </div>
+                <Link
+                  href="/shop"
+                  className="text-sm text-sage-600 hover:text-sage-700 font-medium transition-colors hidden sm:block"
+                >
+                  View all →
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {related.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            </motion.div>
+          </section>
+        )}
+      </div>
+
+      {/* Mobile Sticky Add-to-Cart Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-xl border-t border-stone-200 px-4 py-3 safe-area-bottom">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-display text-xl font-bold text-stone-900">
+              ₹{isSubscription ? Math.round(totalPrice * 0.95) : totalPrice}
+            </p>
+            <p className="text-xs text-stone-400">{quantity} × {product.pricePerUnit}{product.priceUnit}</p>
+          </div>
+          <button className="flex-1 max-w-[200px] py-3.5 bg-sage-600 hover:bg-sage-700 text-white text-sm font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
+            <ShoppingBag size={16} />
+            {isSubscription ? "Subscribe" : "Add to Cart"}
+          </button>
         </div>
       </div>
     </div>
