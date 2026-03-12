@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
+import { ShoppingBag, Menu, X, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -11,6 +11,8 @@ const navLinks = [
   { label: "Subscribe", href: "/subscribe" },
   { label: "Our Story", href: "/about" },
 ];
+
+const advisorNavItem = { label: "Milk Doctor", href: "/advisor" };
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -77,6 +79,15 @@ export default function Navbar() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                href={advisorNavItem.href}
+                className="relative ml-1 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-sage-700 hover:text-sage-900 bg-sage-500/10 hover:bg-sage-500/20 rounded-full transition-all duration-200 focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:ring-offset-2"
+              >
+                <Bot size={14} />
+                {advisorNavItem.label}
+              </Link>
+            </li>
           </ul>
 
           {/* Right actions */}
@@ -173,6 +184,20 @@ export default function Navbar() {
                       </Link>
                     </motion.li>
                   ))}
+                  <motion.li
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: navLinks.length * 0.07 + 0.1, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <Link
+                      href={advisorNavItem.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 px-4 py-3.5 text-base font-semibold text-sage-700 hover:text-sage-900 rounded-xl hover:bg-sage-500/10 transition-colors"
+                    >
+                      <Bot size={18} />
+                      {advisorNavItem.label}
+                    </Link>
+                  </motion.li>
                 </ul>
               </nav>
               <div className="px-4 pb-8 space-y-3">
